@@ -1,0 +1,10 @@
+app:
+  seed:
+    enabled: true
+    operador-email: ${SEED_OPERADOR_EMAIL:operador@aguia.local}
+    operador-password: ${SEED_OPERADOR_PASSWORD:Operador123!}
+    gestor-email: ${SEED_GESTOR_EMAIL:gestor@aguia.local}
+    gestor-password: ${SEED_GESTOR_PASSWORD:Gestor123!}
+    lider-email: ${SEED_LIDER_EMAIL:lider@aguia.local}
+    lider-password: ${SEED_LIDER_PASSWORD:Lider123!}
+

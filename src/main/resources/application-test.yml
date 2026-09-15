@@ -1,0 +1,10 @@
+app:
+  seed:
+    enabled: false
+  jwt:
+    secret: test-secret-with-more-than-thirty-two-bytes
+spring:
+  docker:
+    compose:
+      enabled: false
+

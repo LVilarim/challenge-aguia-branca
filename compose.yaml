@@ -1,9 +1,20 @@
 services:
   mongodb:
-    image: 'mongo:latest'
+    image: mongo:8.0.14
+    restart: unless-stopped
     environment:
-      - 'MONGO_INITDB_DATABASE=mydatabase'
-      - 'MONGO_INITDB_ROOT_PASSWORD=secret'
-      - 'MONGO_INITDB_ROOT_USERNAME=root'
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-aguia_branca}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-aguia-local}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-aguia}
     ports:
-      - '27017'
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mongodb_data:
