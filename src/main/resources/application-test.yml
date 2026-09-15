@@ -7,4 +7,6 @@ spring:
   docker:
     compose:
       enabled: false
-
+  data:
+    mongodb:
+      auto-index-creation: false
