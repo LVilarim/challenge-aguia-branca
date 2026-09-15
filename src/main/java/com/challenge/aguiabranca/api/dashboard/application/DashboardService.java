@@ -46,11 +46,13 @@ public class DashboardService {
     }
 
     public DashboardSummaryResponse summary(String strategyId, String projectId, Instant from, Instant to) {
-        List<ProjectDocument> projects = dashboard.find(strategyId, projectId, from, to);
-        Aggregates values = aggregate(projects);
-        return new DashboardSummaryResponse(projects.size(), values.completed, values.active, values.delayed,
-                values.investment, values.financialReturn, values.profit, values.roi, values.averageProgress,
-                values.averageProductivity, values.averageDuration, clock.instant(), filters(strategyId, projectId, from, to));
+        var values = dashboard.aggregate(strategyId, projectId, from, to, LocalDate.now(clock));
+        ProjectMetrics financial = metrics.calculate(values.totalInvestment(), values.totalFinancialReturn());
+        return new DashboardSummaryResponse(values.projectCount(), values.completedProjectCount(),
+                values.activeProjectCount(), values.delayedProjectCount(), values.totalInvestment(),
+                values.totalFinancialReturn(), financial.profit(), financial.roiPercent(),
+                values.averageProgressPercent(), values.averageProductivityGainPercent(), values.averageDurationDays(),
+                clock.instant(), filters(strategyId, projectId, from, to));
     }
 
     public List<StrategyDashboardResponse> byStrategy(String strategyId, String projectId, Instant from, Instant to) {
@@ -165,4 +167,3 @@ public class DashboardService {
             BigDecimal averageProgress, BigDecimal averageProductivity, BigDecimal averageDuration,
             long completed, long active, long delayed) {}
 }
-

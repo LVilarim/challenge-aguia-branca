@@ -17,6 +17,7 @@ import java.time.Instant;
 import org.springframework.data.domain.Pageable;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StrategyService {
@@ -30,6 +31,7 @@ public class StrategyService {
         this.history = history;
     }
 
+    @Transactional
     public StrategyResponse create(CreateStrategyRequest request, String actor) {
         StrategyDocument strategy = strategies.save(new StrategyDocument(request.category(), request.campaign(),
                 request.description(), request.validFrom(), request.validUntil(), actor));
@@ -56,6 +58,7 @@ public class StrategyService {
                 .map(StrategyResponse::from));
     }
 
+    @Transactional
     public StrategyResponse update(String id, UpdateStrategyRequest request, String actor) {
         StrategyDocument strategy = find(id);
         requireVersion(strategy, request.version());
@@ -66,6 +69,7 @@ public class StrategyService {
         return StrategyResponse.from(strategy);
     }
 
+    @Transactional
     public synchronized StrategyResponse changeActivation(String id, ChangeStrategyActivationRequest request, String actor) {
         StrategyDocument target = find(id);
         requireVersion(target, request.version());
@@ -91,6 +95,7 @@ public class StrategyService {
         return StrategyResponse.from(target);
     }
 
+    @Transactional
     public void archive(String id, String actor) {
         StrategyDocument strategy = find(id);
         if (strategy.getStatus() == StrategyStatus.ARQUIVADA) return;
@@ -105,4 +110,3 @@ public class StrategyService {
         }
     }
 }
-
