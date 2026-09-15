@@ -1,0 +1,28 @@
+name: backend-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Test
+        run: ./mvnw --batch-mode test
+      - name: Package
+        run: ./mvnw --batch-mode -DskipTests package
+      - name: Validate Docker Compose
+        run: docker compose config
+      - name: Build image
+        run: docker build -t aguia-branca-api:${{ github.sha }} .

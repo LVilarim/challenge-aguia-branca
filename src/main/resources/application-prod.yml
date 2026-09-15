@@ -1,7 +1,15 @@
 app:
   seed:
     enabled: false
+  jwt:
+    issuer: ${JWT_ISSUER}
+    secret: ${JWT_SECRET}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
+spring:
+  mongodb:
+    uri: ${SPRING_MONGODB_URI}
 springdoc:
   swagger-ui:
     enabled: false
-

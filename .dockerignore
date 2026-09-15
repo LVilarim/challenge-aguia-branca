@@ -2,5 +2,6 @@
 .idea
 .vscode
 target
+.mvn-local
 .env
 *.log

@@ -1,9 +1,10 @@
 spring:
   application:
     name: aguia-branca-api
+  mongodb:
+    uri: ${SPRING_MONGODB_URI:mongodb://aguia:aguia-local@localhost:27017/aguia_branca?authSource=admin&replicaSet=rs0&directConnection=true}
   data:
     mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI:mongodb://aguia:aguia-local@localhost:27017/aguia_branca?authSource=admin}
       auto-index-creation: true
   jackson:
     default-property-inclusion: non_null
@@ -39,4 +40,3 @@ springdoc:
 logging:
   level:
     com.challenge.aguiabranca.api: ${LOG_LEVEL_APP:INFO}
-

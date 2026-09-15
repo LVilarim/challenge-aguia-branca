@@ -1,7 +1,19 @@
 services:
+  mongo-keyfile:
+    image: alpine:3.22
+    command: >-
+      sh -c "umask 077 && head -c 756 /dev/urandom | base64 > /keyfile/mongo-keyfile
+      && chown 999:999 /keyfile/mongo-keyfile && chmod 400 /keyfile/mongo-keyfile"
+    volumes:
+      - mongodb_keyfile:/keyfile
+
   mongodb:
     image: mongo:8.0.14
     restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongo-keyfile/mongo-keyfile"]
+    depends_on:
+      mongo-keyfile:
+        condition: service_completed_successfully
     environment:
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-aguia_branca}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-aguia-local}
@@ -10,11 +22,47 @@ services:
       - '27017:27017'
     volumes:
       - mongodb_data:/data/db
+      - mongodb_keyfile:/etc/mongo-keyfile:ro
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --username "$${MONGO_INITDB_ROOT_USERNAME}"
+          --password "$${MONGO_INITDB_ROOT_PASSWORD}" --authenticationDatabase admin
+          --eval "try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}).ok }"
       interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    profiles: ["full"]
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SPRING_MONGODB_URI: mongodb://${MONGO_USERNAME:-aguia}:${MONGO_PASSWORD:-aguia-local}@mongodb:27017/${MONGO_DATABASE:-aguia_branca}?authSource=admin&replicaSet=rs0
+      JWT_SECRET: ${JWT_SECRET:-local-development-secret-with-at-least-32-bytes}
+      JWT_ISSUER: ${JWT_ISSUER:-aguia-branca-api}
+      JWT_EXPIRATION_SECONDS: ${JWT_EXPIRATION_SECONDS:-900}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      SEED_OPERADOR_EMAIL: ${SEED_OPERADOR_EMAIL:-operador@aguia.local}
+      SEED_OPERADOR_PASSWORD: ${SEED_OPERADOR_PASSWORD:-Operador123!}
+      SEED_GESTOR_EMAIL: ${SEED_GESTOR_EMAIL:-gestor@aguia.local}
+      SEED_GESTOR_PASSWORD: ${SEED_GESTOR_PASSWORD:-Gestor123!}
+      SEED_LIDER_EMAIL: ${SEED_LIDER_EMAIL:-lider@aguia.local}
+      SEED_LIDER_PASSWORD: ${SEED_LIDER_PASSWORD:-Lider123!}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 15s
       timeout: 5s
       retries: 10
 
 volumes:
   mongodb_data:
+  mongodb_keyfile:
